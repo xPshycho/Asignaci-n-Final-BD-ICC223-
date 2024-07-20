@@ -8,13 +8,10 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -33,17 +30,7 @@ public class PeriodosEstudiante extends JDialog {
     /**
      * Launch the application.
      */
-    public static void main(String[] args) {
-        try {
-            // Ejemplo de uso con un ID ficticio
-            PeriodosEstudiante dialog = new PeriodosEstudiante("10149910");
-            dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-            dialog.setVisible(true);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
+  
     /**
      * Create the dialog.
      */
@@ -52,6 +39,7 @@ public class PeriodosEstudiante extends JDialog {
         setBounds(100, 100, 658, 509);
         setLocationRelativeTo(null);
         setResizable(false);
+        setModal(true); // Hacer que el diálogo sea modal
         getContentPane().setLayout(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -175,14 +163,13 @@ public class PeriodosEstudiante extends JDialog {
                     model.addRow(row);
                 }
 
-                // Mostrar los resultados en una nueva ventana
-                JFrame resultFrame = new JFrame("Horario de Clases");
+                // Mostrar los resultados en una nueva ventana de diálogo modal
+                JDialog resultDialog = new JDialog(PeriodosEstudiante.this, "Horario de Clases", true);
                 JTable resultTable = new JTable(model);
-                resultFrame.add(new JScrollPane(resultTable));
-                resultFrame.setSize(800, 600);
-                resultFrame.setLocationRelativeTo(null);
-                resultFrame.setAlwaysOnTop(true);
-                resultFrame.setVisible(true);
+                resultDialog.add(new JScrollPane(resultTable));
+                resultDialog.setSize(800, 600);
+                resultDialog.setLocationRelativeTo(PeriodosEstudiante.this);
+                resultDialog.setVisible(true);
 
             } catch (SQLException e) {
                 e.printStackTrace();
