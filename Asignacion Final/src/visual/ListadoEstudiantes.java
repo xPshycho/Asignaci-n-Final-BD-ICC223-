@@ -23,9 +23,10 @@ public class ListadoEstudiantes extends JDialog {
 
     private final JPanel contentPanel = new JPanel();
     private JTable table;
-	private JButton btnEliminar;
-	private JButton btnModificar;
-	private JButton btnHorario;
+    private JButton btnEliminar;
+    private JButton btnModificar;
+    private JButton btnHorario;
+    private String selectedStudentId; // Variable para almacenar el ID del estudiante seleccionado
 
     public static void main(String[] args) {
         try {
@@ -55,12 +56,15 @@ public class ListadoEstudiantes extends JDialog {
                 {
                     table = new JTable();
                     table.addMouseListener(new MouseAdapter() {
-                    	@Override
-                    	public void mouseClicked(MouseEvent e) {
-                    		
-                    		btnHorario.setEnabled(true);
-                    		btnModificar.setEnabled(true);
-                    	}
+                        @Override
+                        public void mouseClicked(MouseEvent e) {
+                            int row = table.getSelectedRow();
+                            if (row >= 0) {
+                                selectedStudentId = table.getValueAt(row, 0).toString();
+                                btnHorario.setEnabled(true);
+                                btnModificar.setEnabled(true);
+                            }
+                        }
                     });
                     scrollPane.setViewportView(table);
                     // Configura el JTable con los datos obtenidos
@@ -77,17 +81,30 @@ public class ListadoEstudiantes extends JDialog {
                 buttonPane.add(btnNewButton);
             }
             {
-            	btnHorario = new JButton("Horario");
-            	btnHorario.setEnabled(false);
-            	btnHorario.addActionListener(new ActionListener() {
-            		public void actionPerformed(ActionEvent e) {
-            		}
-            	});
-            	buttonPane.add(btnHorario);
+                btnHorario = new JButton("Horario");
+                btnHorario.setEnabled(false);
+                btnHorario.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        // Usa el ID del estudiante seleccionado
+                        System.out.println("ID del Estudiante para Horario: " + selectedStudentId);
+                        // Llama a la función deseada con el ID del estudiante seleccionado
+                        PeriodosEstudiante estudiante = new PeriodosEstudiante(selectedStudentId);
+                        estudiante.setModal(true);
+                        estudiante.setVisible(true);
+                    }
+                });
+                buttonPane.add(btnHorario);
             }
             {
                 btnModificar = new JButton("Editar");
                 btnModificar.setEnabled(false);
+                btnModificar.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        // Usa el ID del estudiante seleccionado
+                        System.out.println("ID del Estudiante para Editar: " + selectedStudentId);
+                        // Llama a la función deseada con el ID del estudiante seleccionado
+                    }
+                });
                 btnModificar.setActionCommand("OK");
                 buttonPane.add(btnModificar);
                 getRootPane().setDefaultButton(btnModificar);
