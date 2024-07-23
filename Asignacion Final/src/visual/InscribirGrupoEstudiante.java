@@ -6,6 +6,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -38,6 +40,10 @@ public class InscribirGrupoEstudiante extends JDialog {
     private JTextArea textAreaHorario;
     private JButton btnAadir;
     private JButton btnEliminar;
+
+    // Listas para almacenar los cambios pendientes
+    private List<String[]> gruposParaAgregar = new ArrayList<>();
+    private List<String[]> gruposParaEliminar = new ArrayList<>();
 
     /**
      * Launch the application.
@@ -81,9 +87,11 @@ public class InscribirGrupoEstudiante extends JDialog {
                 if (selectedRow >= 0) {
                     selectedStudentId = tableEstudiante.getValueAt(selectedRow, 0).toString();
                     fillGrupoInscritoTable(selectedStudentId);
+                    fillGrupoTable(); // Asegúrate de que esto se llame después de llenar los grupos inscritos
                 }
             }
         });
+
         scrollPane.setViewportView(tableEstudiante);
         
         JPanel panel_1 = new JPanel();
@@ -147,11 +155,55 @@ public class InscribirGrupoEstudiante extends JDialog {
         btnAadir.setBounds(661, 396, 153, 48);
         contentPanel.add(btnAadir);
         
+        JButton btnNewButton = new JButton("Finalizar");
+        btnNewButton.setBounds(919, 720, 115, 29);
+        contentPanel.add(btnNewButton);
+        
+        JButton btnCancelar = new JButton("Cancelar");
+        btnCancelar.setBounds(793, 720, 115, 29);
+        contentPanel.add(btnCancelar);
+        
         // Añadir ActionListener al ComboBox
         comboBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 fillGrupoTable(); // Llama a fillGrupoTable cuando el seleccionado cambia
+            }
+        });
+
+        // Añadir ActionListener a btnAadir
+        btnAadir.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int selectedRow = table_Grupos.getSelectedRow();
+                if (selectedRow >= 0) {
+                    String codigoPeriodo = table_Grupos.getValueAt(selectedRow, 0).toString();
+                    String codigoAsignatura = table_Grupos.getValueAt(selectedRow, 1).toString();
+                    String numeroGrupo = table_Grupos.getValueAt(selectedRow, 2).toString();
+                    agregarGrupo(codigoPeriodo, codigoAsignatura, numeroGrupo);
+                }
+            }
+        });
+
+        // Añadir ActionListener a btnEliminar
+        btnEliminar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int selectedRow = table_GruposInscritos.getSelectedRow();
+                if (selectedRow >= 0) {
+                    String codigoPeriodo = table_GruposInscritos.getValueAt(selectedRow, 0).toString();
+                    String codigoAsignatura = table_GruposInscritos.getValueAt(selectedRow, 1).toString();
+                    String numeroGrupo = table_GruposInscritos.getValueAt(selectedRow, 2).toString();
+                    eliminarGrupo(codigoPeriodo, codigoAsignatura, numeroGrupo);
+                }
+            }
+        });
+
+        // Añadir ActionListener a btnNewButton (Finalizar)
+        btnNewButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                finalizarCambios();
             }
         });
 
@@ -197,26 +249,59 @@ public class InscribirGrupoEstudiante extends JDialog {
 
     private void fillGrupoTable() {
         String ciclo = (String) comboBox.getSelectedItem();
-        String query;
-        if (ciclo.equals("Todos los periodos")) {
-            query = "SELECT * FROM Grupo WHERE Capacidad > 0";
-        } else {
-            query = "SELECT * FROM Grupo WHERE Capacidad > 0 AND [Codigo Periodo] = ?";
+        String queryGrupos = "SELECT * FROM Grupo WHERE Capacidad > 0";
+        List<String[]> gruposInscritos = new ArrayList<>();
+
+        // Si hay un estudiante seleccionado, recupera los grupos ya inscritos
+        if (selectedStudentId != null) {
+            String queryInscritos = "SELECT [Codigo Periodo], [Codigo Asignatura], [Numero Grupo] FROM [Grupo Inscrito] WHERE [ID Estudiante] = ?";
+            try (PreparedStatement stmtInscritos = conn.prepareStatement(queryInscritos)) {
+                stmtInscritos.setString(1, selectedStudentId);
+                try (ResultSet rsInscritos = stmtInscritos.executeQuery()) {
+                    while (rsInscritos.next()) {
+                        gruposInscritos.add(new String[]{
+                            rsInscritos.getString("Codigo Periodo"),
+                            rsInscritos.getString("Codigo Asignatura"),
+                            rsInscritos.getString("Numero Grupo")
+                        });
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
 
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+        // Crear una consulta para los grupos disponibles
+        if (!ciclo.equals("Todos los periodos")) {
+            queryGrupos += " AND [Codigo Periodo] = ?";
+        }
+
+        try (PreparedStatement stmtGrupos = conn.prepareStatement(queryGrupos)) {
             if (!ciclo.equals("Todos los periodos")) {
-                stmt.setString(1, ciclo);
+                stmtGrupos.setString(1, ciclo);
             }
-            try (ResultSet rs = stmt.executeQuery()) {
+            try (ResultSet rsGrupos = stmtGrupos.executeQuery()) {
                 DefaultTableModel model = new DefaultTableModel(new Object[]{"Codigo Periodo", "Codigo Asignatura", "Numero Grupo", "Capacidad"}, 0);
-                while (rs.next()) {
-                    model.addRow(new Object[]{
-                        rs.getString("Codigo Periodo"),
-                        rs.getString("Codigo Asignatura"),
-                        rs.getString("Numero Grupo"),
-                        rs.getInt("Capacidad")
-                    });
+                while (rsGrupos.next()) {
+                    String codigoPeriodo = rsGrupos.getString("Codigo Periodo");
+                    String codigoAsignatura = rsGrupos.getString("Codigo Asignatura");
+                    String numeroGrupo = rsGrupos.getString("Numero Grupo");
+
+                    // Verificar si el grupo ya está inscrito
+                    boolean yaInscrito = gruposInscritos.stream().anyMatch(grupo ->
+                        grupo[0].equals(codigoPeriodo) &&
+                        grupo[1].equals(codigoAsignatura) &&
+                        grupo[2].equals(numeroGrupo)
+                    );
+
+                    if (!yaInscrito) {
+                        model.addRow(new Object[]{
+                            codigoPeriodo,
+                            codigoAsignatura,
+                            numeroGrupo,
+                            rsGrupos.getInt("Capacidad")
+                        });
+                    }
                 }
                 table_Grupos.setModel(model);
             }
@@ -224,6 +309,7 @@ public class InscribirGrupoEstudiante extends JDialog {
             e.printStackTrace();
         }
     }
+
 
     private void fillGrupoInscritoTable(String studentId) {
         if (studentId == null) {
@@ -250,6 +336,7 @@ public class InscribirGrupoEstudiante extends JDialog {
             e.printStackTrace();
         }
     }
+
 
     private void fillComboBoxWithPeriodos() {
         String query = "SELECT DISTINCT [Codigo Periodo] FROM Grupo";
@@ -291,6 +378,94 @@ public class InscribirGrupoEstudiante extends JDialog {
         } catch (SQLException e) {
             e.printStackTrace();
             textAreaHorario.setText("Error al recuperar la información del horario.");
+        }
+    }
+
+    private void agregarGrupo(String codigoPeriodo, String codigoAsignatura, String numeroGrupo) {
+        // Agregar a la lista de grupos para agregar
+        gruposParaAgregar.add(new String[]{codigoPeriodo, codigoAsignatura, numeroGrupo});
+        // Remover de la lista de grupos para eliminar, si está presente
+        gruposParaEliminar.removeIf(grupo -> grupo[0].equals(codigoPeriodo) && grupo[1].equals(codigoAsignatura) && grupo[2].equals(numeroGrupo));
+
+        // Actualizar la tabla de grupos inscritos
+        DefaultTableModel modelInscritos = (DefaultTableModel) table_GruposInscritos.getModel();
+        modelInscritos.addRow(new Object[]{codigoPeriodo, codigoAsignatura, numeroGrupo});
+
+        // Actualizar la tabla de grupos disponibles
+        DefaultTableModel modelGrupos = (DefaultTableModel) table_Grupos.getModel();
+        for (int i = 0; i < modelGrupos.getRowCount(); i++) {
+            if (modelGrupos.getValueAt(i, 0).equals(codigoPeriodo) &&
+                modelGrupos.getValueAt(i, 1).equals(codigoAsignatura) &&
+                modelGrupos.getValueAt(i, 2).equals(numeroGrupo)) {
+                modelGrupos.removeRow(i);
+                break;
+            }
+        }
+    }
+
+    private void eliminarGrupo(String codigoPeriodo, String codigoAsignatura, String numeroGrupo) {
+        // Agregar a la lista de grupos para eliminar
+        gruposParaEliminar.add(new String[]{codigoPeriodo, codigoAsignatura, numeroGrupo});
+        // Remover de la lista de grupos para agregar, si está presente
+        gruposParaAgregar.removeIf(grupo -> grupo[0].equals(codigoPeriodo) && grupo[1].equals(codigoAsignatura) && grupo[2].equals(numeroGrupo));
+
+        // Actualizar la tabla de grupos disponibles
+        DefaultTableModel modelGrupos = (DefaultTableModel) table_Grupos.getModel();
+        modelGrupos.addRow(new Object[]{codigoPeriodo, codigoAsignatura, numeroGrupo});
+
+        // Actualizar la tabla de grupos inscritos
+        DefaultTableModel modelInscritos = (DefaultTableModel) table_GruposInscritos.getModel();
+        for (int i = 0; i < modelInscritos.getRowCount(); i++) {
+            if (modelInscritos.getValueAt(i, 0).equals(codigoPeriodo) &&
+                modelInscritos.getValueAt(i, 1).equals(codigoAsignatura) &&
+                modelInscritos.getValueAt(i, 2).equals(numeroGrupo)) {
+                modelInscritos.removeRow(i);
+                break;
+            }
+        }
+    }
+
+    private void finalizarCambios() {
+        try {
+            // Insertar nuevos grupos inscritos
+            String insertQuery = "INSERT INTO [Grupo Inscrito] ([ID Estudiante], [Codigo Periodo], [Codigo Asignatura], [Numero Grupo]) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement insertStmt = conn.prepareStatement(insertQuery)) {
+                for (String[] grupo : gruposParaAgregar) {
+                    insertStmt.setString(1, selectedStudentId);
+                    insertStmt.setString(2, grupo[0]);
+                    insertStmt.setString(3, grupo[1]);
+                    insertStmt.setString(4, grupo[2]);
+                    insertStmt.addBatch();
+                }
+                insertStmt.executeBatch();
+            }
+
+            // Eliminar grupos inscritos
+            String deleteQuery = "DELETE FROM [Grupo Inscrito] WHERE [ID Estudiante] = ? AND [Codigo Periodo] = ? AND [Codigo Asignatura] = ? AND [Numero Grupo] = ?";
+            try (PreparedStatement deleteStmt = conn.prepareStatement(deleteQuery)) {
+                for (String[] grupo : gruposParaEliminar) {
+                    deleteStmt.setString(1, selectedStudentId);
+                    deleteStmt.setString(2, grupo[0]);
+                    deleteStmt.setString(3, grupo[1]);
+                    deleteStmt.setString(4, grupo[2]);
+                    deleteStmt.addBatch();
+                }
+                deleteStmt.executeBatch();
+            }
+
+            // Limpiar listas temporales
+            gruposParaAgregar.clear();
+            gruposParaEliminar.clear();
+
+            // Actualizar las tablas
+            fillGrupoTable();
+            fillGrupoInscritoTable(selectedStudentId);
+
+            // Mostrar mensaje de éxito
+            System.out.println("Cambios finalizados exitosamente.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error al finalizar los cambios.");
         }
     }
 }
