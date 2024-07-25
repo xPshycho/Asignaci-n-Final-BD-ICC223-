@@ -2,23 +2,28 @@ package visual;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Vector;
 
+import javax.swing.BorderFactory;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.JLabel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.table.DefaultTableModel;
 
 import logico.DatabaseConnection;
+import javax.swing.SwingConstants;
 
 public class InformeInscripcion extends JDialog {
 
@@ -28,7 +33,10 @@ public class InformeInscripcion extends JDialog {
     private JTable tableGrupos;
     private String idEstudiante;
     private String codigoPeriodo;
-    private JTable tableEstudiante;
+    private JLabel lblIDEstudiante;
+    private JLabel lblNombreCompleto;
+    private JLabel lblCarrera;
+    private JLabel lblCodigoPeriodo;
 
     public InformeInscripcion(String idEstudiante, String codigoPeriodo) {
         this.idEstudiante = idEstudiante;
@@ -58,21 +66,30 @@ public class InformeInscripcion extends JDialog {
         panel.add(panel_1);
         panel_1.setLayout(null);
 
-        JPanel panel_3 = new JPanel();
-        panel_3.setBorder(new LineBorder(new Color(0, 0, 0)));
-        panel_3.setBounds(15, 16, 901, 112);
-        panel_1.add(panel_3);
-        panel_3.setLayout(new BorderLayout(0, 0));
+        // Reemplazar la tabla con etiquetas llamativas
+        lblIDEstudiante = new JLabel("ID Estudiante: ");
+        lblIDEstudiante.setFont(new Font("Serif", Font.BOLD, 20));
+        lblIDEstudiante.setBounds(15, 16, 300, 30);
+        panel_1.add(lblIDEstudiante);
 
-        JScrollPane scrollPane = new JScrollPane();
-        panel_3.add(scrollPane);
-        
-        tableEstudiante = new JTable();
-        scrollPane.setViewportView(tableEstudiante);
+        lblNombreCompleto = new JLabel("Nombre Completo: ");
+        lblNombreCompleto.setFont(new Font("Serif", Font.BOLD, 20));
+        lblNombreCompleto.setBounds(15, 56, 806, 30);
+        panel_1.add(lblNombreCompleto);
+
+        lblCarrera = new JLabel("Carrera: ");
+        lblCarrera.setFont(new Font("Serif", Font.BOLD, 20));
+        lblCarrera.setBounds(15, 96, 774, 30);
+        panel_1.add(lblCarrera);
+
+        lblCodigoPeriodo = new JLabel("Código Periodo: ");
+        lblCodigoPeriodo.setFont(new Font("Serif", Font.BOLD, 20));
+        lblCodigoPeriodo.setBounds(15, 136, 300, 30);
+        panel_1.add(lblCodigoPeriodo);
 
         JPanel panel_4 = new JPanel();
         panel_4.setBorder(new LineBorder(new Color(0, 0, 0)));
-        panel_4.setBounds(15, 144, 901, 353);
+        panel_4.setBounds(15, 184, 901, 313);
         panel_1.add(panel_4);
         panel_4.setLayout(new BorderLayout(0, 0));
 
@@ -88,25 +105,36 @@ public class InformeInscripcion extends JDialog {
         panel.add(panel_2);
         panel_2.setLayout(null);
 
-        textTotalCreditos = new JTextField();
-        textTotalCreditos.setEditable(false);
-        textTotalCreditos.setBounds(548, 50, 120, 26);
-        panel_2.add(textTotalCreditos);
-        textTotalCreditos.setColumns(10);
+        // Etiquetas y campos de texto llamativos para totales
+        JLabel lblTotalDeGrupos = new JLabel("Total de Grupos");
+        lblTotalDeGrupos.setFont(new Font("Serif", Font.BOLD, 18));
+        lblTotalDeGrupos.setBounds(229, 16, 150, 20);
+        panel_2.add(lblTotalDeGrupos);
 
         txtTotalDeGrupos = new JTextField();
+        txtTotalDeGrupos.setHorizontalAlignment(SwingConstants.CENTER);
+        txtTotalDeGrupos.setFont(new Font("Serif", Font.BOLD, 18));
         txtTotalDeGrupos.setEditable(false);
-        txtTotalDeGrupos.setBounds(229, 50, 120, 26);
+        txtTotalDeGrupos.setBounds(229, 50, 150, 30);
+        txtTotalDeGrupos.setBackground(new Color(240, 248, 255));
+        txtTotalDeGrupos.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
         panel_2.add(txtTotalDeGrupos);
         txtTotalDeGrupos.setColumns(10);
 
-        JLabel lblNewLabel = new JLabel("Total de Grupos");
-        lblNewLabel.setBounds(229, 16, 120, 20);
-        panel_2.add(lblNewLabel);
+        JLabel lblTotalCreditos = new JLabel("Total de Créditos");
+        lblTotalCreditos.setFont(new Font("Serif", Font.BOLD, 18));
+        lblTotalCreditos.setBounds(537, 16, 150, 20);
+        panel_2.add(lblTotalCreditos);
 
-        JLabel lblNewLabel_1 = new JLabel("Total de Creditos");
-        lblNewLabel_1.setBounds(537, 15, 159, 20);
-        panel_2.add(lblNewLabel_1);
+        textTotalCreditos = new JTextField();
+        textTotalCreditos.setHorizontalAlignment(SwingConstants.CENTER);
+        textTotalCreditos.setFont(new Font("Serif", Font.BOLD, 18));
+        textTotalCreditos.setEditable(false);
+        textTotalCreditos.setBounds(537, 50, 150, 30);
+        textTotalCreditos.setBackground(new Color(240, 248, 255));
+        textTotalCreditos.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+        panel_2.add(textTotalCreditos);
+        textTotalCreditos.setColumns(10);
     }
 
     private void loadData() {
@@ -124,23 +152,12 @@ public class InformeInscripcion extends JDialog {
             pst.setString(2, idEstudiante);
             ResultSet rs = pst.executeQuery();
 
-            Vector<String> columnNamesEstudiante = new Vector<>();
-            columnNamesEstudiante.add("ID Estudiante");
-            columnNamesEstudiante.add("Nombre Completo");
-            columnNamesEstudiante.add("Carrera");
-            columnNamesEstudiante.add("Codigo Periodo");
-
-            Vector<Vector<Object>> dataEstudiante = new Vector<>();
             if (rs.next()) {
-                Vector<Object> row = new Vector<>();
-                row.add(rs.getString("ID Estudiante"));
-                row.add(rs.getString("Nombre Completo"));
-                row.add(rs.getString("Carrera"));
-                row.add(rs.getString("Codigo Periodo"));
-                dataEstudiante.add(row);
+                lblIDEstudiante.setText("ID Estudiante: " + rs.getString("ID Estudiante"));
+                lblNombreCompleto.setText("Nombre Completo: " + rs.getString("Nombre Completo"));
+                lblCarrera.setText("Carrera: " + rs.getString("Carrera"));
+                lblCodigoPeriodo.setText("Código Periodo: " + rs.getString("Codigo Periodo"));
             }
-
-            tableEstudiante.setModel(new javax.swing.table.DefaultTableModel(dataEstudiante, columnNamesEstudiante));
 
             rs.close();
             pst.close();
@@ -179,7 +196,7 @@ public class InformeInscripcion extends JDialog {
                 dataGrupos.add(row);
             }
 
-            tableGrupos.setModel(new javax.swing.table.DefaultTableModel(dataGrupos, columnNamesGrupos));
+            tableGrupos.setModel(new DefaultTableModel(dataGrupos, columnNamesGrupos));
             textTotalCreditos.setText(String.valueOf(totalCreditos));
             txtTotalDeGrupos.setText(String.valueOf(dataGrupos.size()));
 

@@ -45,6 +45,7 @@ public class InscribirGrupoEstudiante extends JDialog {
     // Listas para almacenar los cambios pendientes
     private List<String[]> gruposParaAgregar = new ArrayList<>();
     private List<String[]> gruposParaEliminar = new ArrayList<>();
+    private JButton btnfinalizar;
 
     /**
      * Launch the application.
@@ -90,6 +91,10 @@ public class InscribirGrupoEstudiante extends JDialog {
                     selectedStudentId = tableEstudiante.getValueAt(selectedRow, 0).toString();
                     fillGrupoInscritoTable(selectedStudentId);
                     fillGrupoTable(); // Asegúrate de que esto se llame después de llenar los grupos inscritos
+                    btnAadir.setEnabled(true);
+                    btnEliminar.setEnabled(true);
+                    btnfinalizar.setEnabled(true);
+                    
                 }
             }
         });
@@ -130,6 +135,18 @@ public class InscribirGrupoEstudiante extends JDialog {
         panel_2.add(scrollPane_2, BorderLayout.CENTER);
 
         table_GruposInscritos = new JTable();
+        table_GruposInscritos.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int selectedRow = table_GruposInscritos.getSelectedRow();
+                if (selectedRow >= 0) {
+                    String codigoPeriodo = table_GruposInscritos.getValueAt(selectedRow, 0).toString();
+                    String codigoAsignatura = table_GruposInscritos.getValueAt(selectedRow, 1).toString();
+                    String numeroGrupo = table_GruposInscritos.getValueAt(selectedRow, 2).toString();
+                    fillHorario(codigoPeriodo, codigoAsignatura, numeroGrupo);
+                }
+            }
+        });
         scrollPane_2.setViewportView(table_GruposInscritos);
 
         // Crear e inicializar el ComboBox
@@ -150,16 +167,19 @@ public class InscribirGrupoEstudiante extends JDialog {
         panel_3.add(scrollPane_3, BorderLayout.CENTER);
 
         btnEliminar = new JButton("Eliminar");
+        btnEliminar.setEnabled(false);
         btnEliminar.setBounds(319, 396, 153, 48);
         contentPanel.add(btnEliminar);
 
         btnAadir = new JButton("Añadir");
+        btnAadir.setEnabled(false);
         btnAadir.setBounds(661, 396, 153, 48);
         contentPanel.add(btnAadir);
 
-        JButton btnNewButton = new JButton("Finalizar");
-        btnNewButton.setBounds(919, 720, 115, 29);
-        contentPanel.add(btnNewButton);
+        btnfinalizar = new JButton("Finalizar");
+        btnfinalizar.setEnabled(false);
+        btnfinalizar.setBounds(919, 720, 115, 29);
+        contentPanel.add(btnfinalizar);
 
         JButton btnCancelar = new JButton("Cancelar");
         btnCancelar.addActionListener(new ActionListener() {
@@ -207,7 +227,7 @@ public class InscribirGrupoEstudiante extends JDialog {
         });
 
         // Añadir ActionListener a btnNewButton (Finalizar)
-        btnNewButton.addActionListener(new ActionListener() {
+        btnfinalizar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 finalizarCambios();
