@@ -7,18 +7,14 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Image;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.IOException;
 
-import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class App extends JFrame {
 
@@ -65,7 +61,7 @@ public class App extends JFrame {
 
         // Create title label
         JLabel titleLabel = new JLabel("Sistema Académico");
-        titleLabel.setFont(new Font("Serif", Font.BOLD, 32)); // Set font size and style
+        titleLabel.setFont(new Font("Serif", Font.BOLD, 48)); // Set font size and style
         GridBagConstraints gbc_title = new GridBagConstraints();
         gbc_title.gridx = 0;
         gbc_title.gridy = 0;
@@ -73,40 +69,30 @@ public class App extends JFrame {
         gbc_title.insets = new Insets(20, 0, 20, 0);
         panelCenter.add(titleLabel, gbc_title);
 
-        // Create image labels as buttons
-        JLabel button1 = new JLabel("Botón 1", JLabel.CENTER);
-        JLabel button2 = new JLabel("Botón 2", JLabel.CENTER);
+        // Create buttons
+        JButton button1 = new JButton("Estudiantes");
+        button1.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		ListadoEstudiantes listaEs = new ListadoEstudiantes();
+        		listaEs.setModal(true);
+        		listaEs.setVisible(true);
+        	}
+        });
+        JButton button2 = new JButton("Grupos");
+        button2.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		ListadoGrupos listaGrupos = new ListadoGrupos();
+        		listaGrupos.setModal(true);
+        		listaGrupos.setVisible(true);
+        	}
+        });
 
         // Set button size
         Dimension buttonSize = new Dimension(200, 100);
         button1.setPreferredSize(buttonSize);
         button2.setPreferredSize(buttonSize);
 
-        // Load background image for buttons
-        try {
-            Image img = ImageIO.read(new File("/Asignacion Final/img/estudianteBoton.png"));
-            button1.setIcon(new ImageIcon(img.getScaledInstance(button1.getWidth(), button1.getHeight(), Image.SCALE_SMOOTH)));
-            button2.setIcon(new ImageIcon(img.getScaledInstance(button2.getWidth(), button2.getHeight(), Image.SCALE_SMOOTH)));
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-
-        // Add mouse listener to labels to act as buttons
-        button1.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                System.out.println("Botón 1 clicked");
-            }
-        });
-
-        button2.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                System.out.println("Botón 2 clicked");
-            }
-        });
-
-        // Increase space between buttons
+        // Add buttons to panel
         GridBagConstraints gbc_button1 = new GridBagConstraints();
         gbc_button1.gridx = 0;
         gbc_button1.gridy = 1;

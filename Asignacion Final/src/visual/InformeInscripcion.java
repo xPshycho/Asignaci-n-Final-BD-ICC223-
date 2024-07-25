@@ -1,6 +1,7 @@
 package visual;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.EventQueue;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -8,19 +9,18 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Vector;
 
-import javax.swing.JFrame;
+import javax.swing.JDialog;
 import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
-import java.awt.Color;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 
 import logico.DatabaseConnection;
 
-public class InformeInscripcion extends JFrame {
+public class InformeInscripcion extends JDialog {
 
     private JPanel contentPane;
     private JTextField textTotalCreditos;
@@ -38,8 +38,10 @@ public class InformeInscripcion extends JFrame {
     }
 
     private void initialize() {
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setBounds(100, 100, 1079, 788);
+        setModal(true);
+        setLocationRelativeTo(null);
         contentPane = new JPanel();
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
         setContentPane(contentPane);
@@ -113,18 +115,20 @@ public class InformeInscripcion extends JFrame {
         try {
             // Cargar Información del Estudiante
             String sqlEstudiante = "SELECT e.[ID Estudiante], CONCAT(e.[Nombre], ' ', e.[Apellido]) AS [Nombre Completo], "
-                + "c.[Nombre] AS [Carrera] "
+                + "c.[Nombre] AS [Carrera], ? AS [Codigo Periodo] "
                 + "FROM [Estudiante] e "
                 + "JOIN [Carrera] c ON e.[ID Carrera] = c.[ID Carrera] "
                 + "WHERE e.[ID Estudiante] = ?;";
             PreparedStatement pst = conn.prepareStatement(sqlEstudiante);
-            pst.setString(1, idEstudiante);
+            pst.setString(1, codigoPeriodo);
+            pst.setString(2, idEstudiante);
             ResultSet rs = pst.executeQuery();
 
             Vector<String> columnNamesEstudiante = new Vector<>();
             columnNamesEstudiante.add("ID Estudiante");
             columnNamesEstudiante.add("Nombre Completo");
             columnNamesEstudiante.add("Carrera");
+            columnNamesEstudiante.add("Codigo Periodo");
 
             Vector<Vector<Object>> dataEstudiante = new Vector<>();
             if (rs.next()) {
@@ -132,6 +136,7 @@ public class InformeInscripcion extends JFrame {
                 row.add(rs.getString("ID Estudiante"));
                 row.add(rs.getString("Nombre Completo"));
                 row.add(rs.getString("Carrera"));
+                row.add(rs.getString("Codigo Periodo"));
                 dataEstudiante.add(row);
             }
 
@@ -142,20 +147,14 @@ public class InformeInscripcion extends JFrame {
 
             // Cargar Grupos Inscritos
             String sqlGrupos = "SELECT g.[Numero Grupo], g.[Codigo Asignatura], a.[Nombre] AS [Nombre Asignatura], "
-                + "a.[Creditos], h.[Horario_Condensado] "
+                + "a.[Creditos], g.[Horario] "
                 + "FROM [Grupo Inscrito] gi "
                 + "JOIN [Grupo] g ON gi.[Codigo Periodo] = g.[Codigo Periodo] AND gi.[Codigo Asignatura] = g.[Codigo Asignatura] AND gi.[Numero Grupo] = g.[Numero Grupo] "
                 + "JOIN [Asignatura] a ON g.[Codigo Asignatura] = a.[Codigo] "
-                + "JOIN ( "
-                + "    SELECT [Codigo Periodo], [Codigo Asignatura], [Numero Grupo], "
-                + "    STRING_AGG(CONCAT(d.[Nombre_Corto], ' ', FORMAT(h.[FechaHora_Inicio], 'HH:mm'), '-', FORMAT(h.[FechaHora_Fin], 'HH:mm')), ', ') AS [Horario_Condensado] "
-                + "    FROM [Horario_Grupo] h "
-                + "    JOIN [Dia_Semana] d ON h.[Numero Dia] = d.[Numero_Dia] "
-                + "    GROUP BY [Codigo Periodo], [Codigo Asignatura], [Numero Grupo] "
-                + ") h ON g.[Codigo Periodo] = h.[Codigo Periodo] AND g.[Codigo Asignatura] = h.[Codigo Asignatura] AND g.[Numero Grupo] = h.[Numero Grupo] "
-                + "WHERE gi.[ID Estudiante] = ?;";
+                + "WHERE gi.[ID Estudiante] = ? AND gi.[Codigo Periodo] = ?;";
             pst = conn.prepareStatement(sqlGrupos);
             pst.setString(1, idEstudiante);
+            pst.setString(2, codigoPeriodo);
             rs = pst.executeQuery();
 
             Vector<String> columnNamesGrupos = new Vector<>();
@@ -174,7 +173,7 @@ public class InformeInscripcion extends JFrame {
                 row.add(rs.getString("Nombre Asignatura"));
                 int creditos = rs.getInt("Creditos");
                 row.add(creditos);
-                row.add(rs.getString("Horario_Condensado"));
+                row.add(rs.getString("Horario"));
 
                 totalCreditos += creditos;
                 dataGrupos.add(row);
@@ -183,6 +182,13 @@ public class InformeInscripcion extends JFrame {
             tableGrupos.setModel(new javax.swing.table.DefaultTableModel(dataGrupos, columnNamesGrupos));
             textTotalCreditos.setText(String.valueOf(totalCreditos));
             txtTotalDeGrupos.setText(String.valueOf(dataGrupos.size()));
+
+            // Ajustar tamaños de las columnas
+            tableGrupos.getColumnModel().getColumn(0).setPreferredWidth(100);
+            tableGrupos.getColumnModel().getColumn(1).setPreferredWidth(150);
+            tableGrupos.getColumnModel().getColumn(2).setPreferredWidth(200);
+            tableGrupos.getColumnModel().getColumn(3).setPreferredWidth(100);
+            tableGrupos.getColumnModel().getColumn(4).setPreferredWidth(350);
 
             rs.close();
             pst.close();

@@ -11,6 +11,7 @@ import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
@@ -65,20 +66,21 @@ public class InscribirGrupoEstudiante extends JDialog {
         conn = DatabaseConnection.getConnection();
 
         setBounds(100, 100, 1096, 821);
+        setModal(true);
         getContentPane().setLayout(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
         contentPanel.setLayout(null);
-        
+
         JPanel panel = new JPanel();
         panel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
         panel.setBounds(15, 13, 465, 367);
         contentPanel.add(panel);
         panel.setLayout(new BorderLayout(0, 0));
-        
+
         JScrollPane scrollPane = new JScrollPane();
         panel.add(scrollPane, BorderLayout.CENTER);
-        
+
         tableEstudiante = new JTable();
         tableEstudiante.addMouseListener(new MouseAdapter() {
             @Override
@@ -93,16 +95,16 @@ public class InscribirGrupoEstudiante extends JDialog {
         });
 
         scrollPane.setViewportView(tableEstudiante);
-        
+
         JPanel panel_1 = new JPanel();
         panel_1.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
         panel_1.setBounds(495, 16, 489, 364);
         contentPanel.add(panel_1);
         panel_1.setLayout(new BorderLayout(0, 0));
-        
+
         JScrollPane scrollPane_1 = new JScrollPane();
         panel_1.add(scrollPane_1, BorderLayout.CENTER);
-        
+
         table_Grupos = new JTable();
         table_Grupos.addMouseListener(new MouseAdapter() {
             @Override
@@ -117,16 +119,16 @@ public class InscribirGrupoEstudiante extends JDialog {
             }
         });
         scrollPane_1.setViewportView(table_Grupos);
-        
+
         JPanel panel_2 = new JPanel();
         panel_2.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
         panel_2.setBounds(25, 460, 1034, 237);
         contentPanel.add(panel_2);
         panel_2.setLayout(new BorderLayout(0, 0));
-        
+
         JScrollPane scrollPane_2 = new JScrollPane();
         panel_2.add(scrollPane_2, BorderLayout.CENTER);
-        
+
         table_GruposInscritos = new JTable();
         scrollPane_2.setViewportView(table_GruposInscritos);
 
@@ -134,35 +136,40 @@ public class InscribirGrupoEstudiante extends JDialog {
         comboBox = new JComboBox<>();
         comboBox.setBounds(940, 399, 94, 35);
         contentPanel.add(comboBox);
-        
+
         JPanel panel_3 = new JPanel();
         panel_3.setBorder(new SoftBevelBorder(BevelBorder.LOWERED, null, null, null, null));
         panel_3.setBounds(384, 714, 296, 35);
         contentPanel.add(panel_3);
         panel_3.setLayout(new BorderLayout(0, 0));
-        
+
         // Crear JTextArea para mostrar el horario
         textAreaHorario = new JTextArea();
         textAreaHorario.setEditable(false); // Solo lectura
         JScrollPane scrollPane_3 = new JScrollPane(textAreaHorario);
         panel_3.add(scrollPane_3, BorderLayout.CENTER);
-        
+
         btnEliminar = new JButton("Eliminar");
         btnEliminar.setBounds(319, 396, 153, 48);
         contentPanel.add(btnEliminar);
-        
-        btnAadir = new JButton("A\u00F1adir");
+
+        btnAadir = new JButton("Añadir");
         btnAadir.setBounds(661, 396, 153, 48);
         contentPanel.add(btnAadir);
-        
+
         JButton btnNewButton = new JButton("Finalizar");
         btnNewButton.setBounds(919, 720, 115, 29);
         contentPanel.add(btnNewButton);
-        
+
         JButton btnCancelar = new JButton("Cancelar");
+        btnCancelar.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		dispose();
+        	}
+        });
         btnCancelar.setBounds(793, 720, 115, 29);
         contentPanel.add(btnCancelar);
-        
+
         // Añadir ActionListener al ComboBox
         comboBox.addActionListener(new ActionListener() {
             @Override
@@ -382,45 +389,51 @@ public class InscribirGrupoEstudiante extends JDialog {
     }
 
     private void agregarGrupo(String codigoPeriodo, String codigoAsignatura, String numeroGrupo) {
-        // Agregar a la lista de grupos para agregar
-        gruposParaAgregar.add(new String[]{codigoPeriodo, codigoAsignatura, numeroGrupo});
-        // Remover de la lista de grupos para eliminar, si está presente
-        gruposParaEliminar.removeIf(grupo -> grupo[0].equals(codigoPeriodo) && grupo[1].equals(codigoAsignatura) && grupo[2].equals(numeroGrupo));
+        int confirm = JOptionPane.showConfirmDialog(this, "¿Está seguro de que desea agregar este grupo?", "Confirmar adición", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            // Agregar a la lista de grupos para agregar
+            gruposParaAgregar.add(new String[]{codigoPeriodo, codigoAsignatura, numeroGrupo});
+            // Remover de la lista de grupos para eliminar, si está presente
+            gruposParaEliminar.removeIf(grupo -> grupo[0].equals(codigoPeriodo) && grupo[1].equals(codigoAsignatura) && grupo[2].equals(numeroGrupo));
 
-        // Actualizar la tabla de grupos inscritos
-        DefaultTableModel modelInscritos = (DefaultTableModel) table_GruposInscritos.getModel();
-        modelInscritos.addRow(new Object[]{codigoPeriodo, codigoAsignatura, numeroGrupo});
+            // Actualizar la tabla de grupos inscritos
+            DefaultTableModel modelInscritos = (DefaultTableModel) table_GruposInscritos.getModel();
+            modelInscritos.addRow(new Object[]{codigoPeriodo, codigoAsignatura, numeroGrupo});
 
-        // Actualizar la tabla de grupos disponibles
-        DefaultTableModel modelGrupos = (DefaultTableModel) table_Grupos.getModel();
-        for (int i = 0; i < modelGrupos.getRowCount(); i++) {
-            if (modelGrupos.getValueAt(i, 0).equals(codigoPeriodo) &&
-                modelGrupos.getValueAt(i, 1).equals(codigoAsignatura) &&
-                modelGrupos.getValueAt(i, 2).equals(numeroGrupo)) {
-                modelGrupos.removeRow(i);
-                break;
+            // Actualizar la tabla de grupos disponibles
+            DefaultTableModel modelGrupos = (DefaultTableModel) table_Grupos.getModel();
+            for (int i = 0; i < modelGrupos.getRowCount(); i++) {
+                if (modelGrupos.getValueAt(i, 0).equals(codigoPeriodo) &&
+                    modelGrupos.getValueAt(i, 1).equals(codigoAsignatura) &&
+                    modelGrupos.getValueAt(i, 2).equals(numeroGrupo)) {
+                    modelGrupos.removeRow(i);
+                    break;
+                }
             }
         }
     }
 
     private void eliminarGrupo(String codigoPeriodo, String codigoAsignatura, String numeroGrupo) {
-        // Agregar a la lista de grupos para eliminar
-        gruposParaEliminar.add(new String[]{codigoPeriodo, codigoAsignatura, numeroGrupo});
-        // Remover de la lista de grupos para agregar, si está presente
-        gruposParaAgregar.removeIf(grupo -> grupo[0].equals(codigoPeriodo) && grupo[1].equals(codigoAsignatura) && grupo[2].equals(numeroGrupo));
+        int confirm = JOptionPane.showConfirmDialog(this, "¿Está seguro de que desea eliminar este grupo?", "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            // Agregar a la lista de grupos para eliminar
+            gruposParaEliminar.add(new String[]{codigoPeriodo, codigoAsignatura, numeroGrupo});
+            // Remover de la lista de grupos para agregar, si está presente
+            gruposParaAgregar.removeIf(grupo -> grupo[0].equals(codigoPeriodo) && grupo[1].equals(codigoAsignatura) && grupo[2].equals(numeroGrupo));
 
-        // Actualizar la tabla de grupos disponibles
-        DefaultTableModel modelGrupos = (DefaultTableModel) table_Grupos.getModel();
-        modelGrupos.addRow(new Object[]{codigoPeriodo, codigoAsignatura, numeroGrupo});
+            // Actualizar la tabla de grupos disponibles
+            DefaultTableModel modelGrupos = (DefaultTableModel) table_Grupos.getModel();
+            modelGrupos.addRow(new Object[]{codigoPeriodo, codigoAsignatura, numeroGrupo});
 
-        // Actualizar la tabla de grupos inscritos
-        DefaultTableModel modelInscritos = (DefaultTableModel) table_GruposInscritos.getModel();
-        for (int i = 0; i < modelInscritos.getRowCount(); i++) {
-            if (modelInscritos.getValueAt(i, 0).equals(codigoPeriodo) &&
-                modelInscritos.getValueAt(i, 1).equals(codigoAsignatura) &&
-                modelInscritos.getValueAt(i, 2).equals(numeroGrupo)) {
-                modelInscritos.removeRow(i);
-                break;
+            // Actualizar la tabla de grupos inscritos
+            DefaultTableModel modelInscritos = (DefaultTableModel) table_GruposInscritos.getModel();
+            for (int i = 0; i < modelInscritos.getRowCount(); i++) {
+                if (modelInscritos.getValueAt(i, 0).equals(codigoPeriodo) &&
+                    modelInscritos.getValueAt(i, 1).equals(codigoAsignatura) &&
+                    modelInscritos.getValueAt(i, 2).equals(numeroGrupo)) {
+                    modelInscritos.removeRow(i);
+                    break;
+                }
             }
         }
     }
@@ -462,10 +475,11 @@ public class InscribirGrupoEstudiante extends JDialog {
             fillGrupoInscritoTable(selectedStudentId);
 
             // Mostrar mensaje de éxito
-            System.out.println("Cambios finalizados exitosamente.");
+            JOptionPane.showMessageDialog(this, "Cambios finalizados exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
         } catch (SQLException e) {
             e.printStackTrace();
-            System.out.println("Error al finalizar los cambios.");
+            JOptionPane.showMessageDialog(this, "Error al finalizar los cambios.", "Error", JOptionPane.ERROR_MESSAGE);
         }
+        dispose();
     }
 }

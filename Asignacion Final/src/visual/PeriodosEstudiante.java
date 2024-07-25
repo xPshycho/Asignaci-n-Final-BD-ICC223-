@@ -34,7 +34,7 @@ public class PeriodosEstudiante extends JDialog {
     /**
      * Create the dialog.
      */
-    public PeriodosEstudiante(String studentId) {
+    public PeriodosEstudiante(String studentId, boolean callNormalProcedure) {
         this.studentId = studentId; // Almacena el ID del estudiante
         setBounds(100, 100, 658, 509);
         setLocationRelativeTo(null);
@@ -77,11 +77,18 @@ public class PeriodosEstudiante extends JDialog {
                 JButton okButton = new JButton("OK");
                 okButton.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
-                        if (selectedPeriodoId != null && !selectedPeriodoId.isEmpty()) {
-                            System.out.println("Llamando al procedimiento almacenado con ID estudiante: " + studentId + " y periodo: " + selectedPeriodoId);
-                            callStoredProcedure(studentId, selectedPeriodoId);
+                        if (callNormalProcedure) {
+                            if (selectedPeriodoId != null && !selectedPeriodoId.isEmpty()) {
+                                System.out.println("Llamando al procedimiento almacenado con ID estudiante: " + studentId + " y periodo: " + selectedPeriodoId);
+                                callStoredProcedure(studentId, selectedPeriodoId);
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Por favor seleccione un periodo.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+                            }
                         } else {
-                            JOptionPane.showMessageDialog(null, "Por favor seleccione un periodo.", "Advertencia", JOptionPane.WARNING_MESSAGE);
+                            // Llama a InformeInscripcion
+                            InformeInscripcion informe = new InformeInscripcion(studentId, selectedPeriodoId);
+                            informe.setModal(true);
+                            informe.setVisible(true);
                         }
                     }
                 });
