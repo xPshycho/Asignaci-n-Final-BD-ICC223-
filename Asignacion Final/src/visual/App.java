@@ -13,13 +13,19 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import logico.DatabaseConnection;
+
 import java.awt.event.ActionListener;
+import java.sql.Connection;
 import java.awt.event.ActionEvent;
 
 public class App extends JFrame {
 
     private JPanel contentPane;
     private Dimension dim;
+    private Connection conn;
+
 
     /**
      * Launch the application.
@@ -41,11 +47,13 @@ public class App extends JFrame {
      * Create the frame.
      */
     public App() {
+
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setBounds(100, 100, 450, 300);
         dim = super.getToolkit().getScreenSize();
         super.setSize(dim.width, dim.height - 100);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
+
 
         setLocationRelativeTo(null);
 

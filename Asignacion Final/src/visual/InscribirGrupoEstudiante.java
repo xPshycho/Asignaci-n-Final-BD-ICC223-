@@ -69,6 +69,7 @@ public class InscribirGrupoEstudiante extends JDialog {
         setBounds(100, 100, 1096, 821);
         setModal(true);
         getContentPane().setLayout(new BorderLayout());
+        setLocationRelativeTo(null);
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
         contentPanel.setLayout(null);
@@ -239,20 +240,6 @@ public class InscribirGrupoEstudiante extends JDialog {
         fillComboBoxWithPeriodos(); // Primero llenar el ComboBox
         fillGrupoTable(); // Luego llenar la tabla de grupos
         fillGrupoInscritoTable(null); // Llenar inicialmente sin filtrar por estudiante
-
-        // Añadir un listener para cerrar la conexión cuando el diálogo se cierre
-        addWindowListener(new java.awt.event.WindowAdapter() {
-            @Override
-            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-                try {
-                    if (conn != null && !conn.isClosed()) {
-                        conn.close();
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
     }
 
     private void fillEstudianteTable() {
