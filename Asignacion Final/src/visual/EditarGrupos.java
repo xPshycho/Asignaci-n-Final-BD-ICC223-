@@ -33,6 +33,8 @@ public class EditarGrupos extends JDialog {
     private String codigoPeriodo;
     private String codigoAsignatura;
     private String numeroGrupo;
+    private ListadoGrupos listadoGrupos = new ListadoGrupos();
+
 
     /**
      * Launch the application.
@@ -95,7 +97,6 @@ public class EditarGrupos extends JDialog {
                         JOptionPane.showMessageDialog(null, "Debe seleccionar al menos un día.", "Error", JOptionPane.ERROR_MESSAGE);
                         return;
                     }
-
                     int confirm = JOptionPane.showConfirmDialog(null, "¿Estás seguro de que quieres actualizar el horario?", "Confirmar", JOptionPane.YES_NO_OPTION);
                     if (confirm == JOptionPane.YES_OPTION) {
                         // Recoger la información seleccionada
@@ -121,6 +122,8 @@ public class EditarGrupos extends JDialog {
                         actualizarHorarioGrupo(codigoPeriodo, codigoAsignatura, 
                         		numeroGrupo, dias.toString(), horaInicio, horaFin);
                         dispose();
+                        listadoGrupos.loadData();
+                        
                     }
                 }
             });
@@ -149,6 +152,8 @@ public class EditarGrupos extends JDialog {
                         // Lógica para eliminar el horario en la base de datos
                         eliminarHorarioGrupo(codigoPeriodo, codigoAsignatura, numeroGrupo);
                         dispose();
+                        listadoGrupos.loadData();
+
                     }
                 }
             });
